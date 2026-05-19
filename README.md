@@ -1,4 +1,4 @@
-# MTT-Trainingsplan · Berolina Klinik
+# MTT-Trainingsplan 
 
 Digitaler Trainingsbegleiter – kontinuierlich, ohne festes Enddatum.
 
