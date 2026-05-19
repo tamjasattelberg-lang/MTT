@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MTT-Trainingsplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F2EFE9; --card: #FFFFFF; --green: #1B5E3B; --green-light: #E8F3ED;
+    --green-mid: #2D7A52; --amber: #D97706; --amber-light: #FEF3C7;
+    --red: #DC2626; --red-light: #FEE2E2; --text: #1C1917; --muted: #78716C;
+    --border: #E7E5E0; --shadow: 0 1px 3px rgba(0,0,0,0.08); --radius: 14px;
+    --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  .screen { display: none; } .screen.active { display: block; }
+  .container { max-width: 480px; margin: 0 auto; padding: 0 16px 50px; }
+  .page-header { display: flex; align-items: center; gap: 12px; padding: 16px 0 12px; }
+  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--card); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); flex-shrink: 0; color: var(--text); transition: background 0.15s; }
+  .back-btn:active { background: var(--border); }
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 10px; }
+  .home-hero { text-align: center; padding: 24px 0 12px; }
+  .home-hero .clinic { font-size: 10px; letter-spacing: 2.5px; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+  .home-hero h1 { font-size: 26px; font-weight: 800; color: var(--green); line-height: 1.1; margin-bottom: 4px; }
+  .home-hero .subtitle { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .progress-card .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+  .progress-label { font-weight: 600; } .progress-count { color: var(--muted); font-size: 13px; }
+  .progress-track { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, var(--green), var(--green-mid)); height: 100%; border-radius: 99px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .section-title { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+  .day-item { background: var(--card); border-radius: var(--radius); padding: 13px 16px; margin-bottom: 8px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; cursor: pointer; border-left: 4px solid var(--border); transition: transform 0.12s; -webkit-tap-highlight-color: transparent; }
+  .day-item:active { transform: scale(0.985); }
+  .day-item.done { border-color: var(--green-mid); }
+  .day-item.today-item { border-color: #6366F1; }
+  .day-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--bg); flex-shrink: 0; }
+  .day-item.done .day-icon { background: var(--green-light); }
+  .day-item.today-item .day-icon { background: #EEF2FF; }
+  .day-info { flex: 1; }
+  .day-title { font-weight: 700; font-size: 15px; }
+  .day-date { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .day-badge { font-size: 12px; font-weight: 600; color: var(--green-mid); }
+  .chevron { color: var(--border); font-size: 20px; }
+  .btn-primary { width: 100%; padding: 15px; background: var(--green); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font); font-weight: 700; font-size: 16px; cursor: pointer; margin-bottom: 10px; transition: background 0.15s; -webkit-tap-highlight-color: transparent; }
+  .btn-primary:active { background: var(--green-mid); }
+  .btn-primary.dark { background: #1C1917; }
+  .btn-primary.dark:active { background: #2D2924; }
+  .btn-primary.purple { background: #4F46E5; }
+  .btn-primary.purple:active { background: #4338CA; }
+  .info-box { background: var(--amber-light); border-radius: var(--radius); padding: 14px; font-size: 12px; color: #78350F; line-height: 1.7; margin-bottom: 12px; }
+  .info-box strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .training-header { padding: 16px 0 8px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .th-info { flex: 1; }
+  .th-title { font-weight: 800; font-size: 18px; }
+  .th-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .badge-done { background: var(--green-mid); color: #fff; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+  .motivations-card { background: linear-gradient(135deg, #1B5E3B, #2D7A52); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 10px; color: #fff; }
+  .motivations-card .quote { font-size: 15px; font-weight: 600; line-height: 1.5; margin-bottom: 4px; }
+  .motivations-card .quote-author { font-size: 11px; opacity: 0.7; }
+  .befinden-row { display: flex; gap: 8px; justify-content: center; padding: 4px 0; }
+  .emoji-btn { background: none; border: none; font-size: 26px; cursor: pointer; padding: 4px; border-radius: 8px; transition: transform 0.15s, opacity 0.15s; opacity: 0.35; -webkit-tap-highlight-color: transparent; }
+  .emoji-btn.selected { opacity: 1; transform: scale(1.15); }
+  .ex-card { background: var(--card); border-radius: var(--radius); margin-bottom: 8px; box-shadow: var(--shadow); overflow: hidden; }
+  .ex-header { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; gap: 10px; -webkit-tap-highlight-color: transparent; }
+  .ex-checkbox { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--border); background: var(--bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all 0.15s; font-size: 14px; font-weight: 700; color: transparent; -webkit-tap-highlight-color: transparent; }
+  .ex-checkbox.checked { border-color: var(--green-mid); background: var(--green-mid); color: #fff; }
+  .ex-name { font-weight: 600; font-size: 14px; }
+  .ex-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ex-arrow { color: var(--border); font-size: 14px; margin-left: auto; }
+  .ex-body { padding: 0 14px 14px; border-top: 1px solid var(--border); display: none; }
+  .ex-body.open { display: block; }
+  .hint-box { font-size: 12px; color: #5C5046; background: #F8F5F0; border-radius: 8px; padding: 9px 10px; margin: 10px 0; line-height: 1.5; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; display: block; }
+  .field-group { margin-bottom: 12px; }
+  .num-input { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--border); font-family: var(--font); font-size: 16px; color: var(--text); background: var(--bg); -webkit-appearance: none; transition: border-color 0.15s; }
+  .num-input:focus { outline: none; border-color: var(--green-mid); }
+  .schmerz-row { display: flex; gap: 6px; }
+  .schmerz-btn { flex: 1; padding: 8px 0; border-radius: 9px; border: none; cursor: pointer; font-family: var(--font); font-weight: 700; font-size: 15px; background: var(--bg); color: var(--muted); transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .schmerz-btn.s0.active { background: var(--green-mid); color: #fff; }
+  .schmerz-btn.s1.active { background: #F59E0B; color: #fff; }
+  .schmerz-btn.s2.active { background: #EF4444; color: #fff; }
+  .schmerz-btn.s3.active { background: #7F1D1D; color: #fff; }
+  .schmerz-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .notiz-input { width: 100%; padding: 9px 12px; border-radius: 9px; border: 1.5px solid var(--border); font-family: var(--font); font-size: 14px; color: var(--text); background: var(--bg); min-height: 52px; resize: none; transition: border-color 0.15s; }
+  .notiz-input:focus { outline: none; border-color: var(--green-mid); }
+  /* Aktivität */
+  .activity-section { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 10px; }
+  .activity-title { font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+  .activity-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .activity-icon { font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; }
+  .activity-label { font-size: 13px; font-weight: 600; width: 90px; flex-shrink: 0; }
+  .activity-input { flex: 1; padding: 7px 10px; border-radius: 9px; border: 1.5px solid var(--border); font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); -webkit-appearance: none; }
+  .activity-input:focus { outline: none; border-color: var(--green-mid); }
+  .activity-unit { font-size: 12px; color: var(--muted); width: 28px; flex-shrink: 0; }
+  /* Auswertung */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--card); border-radius: var(--radius); padding: 16px; text-align: center; box-shadow: var(--shadow); }
+  .stat-num { font-size: 34px; font-weight: 800; color: var(--green); line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .ex-result { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .ex-result-name { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .kg-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+  .kg-pill { background: var(--bg); border-radius: 7px; padding: 4px 10px; font-size: 12px; }
+  .pill-label { font-size: 10px; color: var(--muted); }
+  .alert-red { font-size: 12px; color: var(--red); background: var(--red-light); border-radius: 7px; padding: 5px 9px; margin-top: 4px; }
+  .alert-green { font-size: 12px; color: var(--green); background: var(--green-light); border-radius: 7px; padding: 5px 9px; margin-top: 4px; }
+  .reco-box { background: var(--amber-light); border-radius: var(--radius); padding: 14px; margin: 10px 0; font-size: 12px; color: #78350F; line-height: 1.7; }
+  .reco-box strong { display: block; margin-bottom: 6px; font-size: 13px; }
+  .zwischenauw { background: linear-gradient(135deg, #4F46E5, #7C3AED); color: #fff; border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .zwischenauw h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .zwischenauw p { font-size: 12px; line-height: 1.6; opacity: 0.9; }
+  .zwischenauw .zw-item { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12px; line-height: 1.5; }
+  .activity-summary { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; box-shadow: var(--shadow); }
+  .activity-summary h4 { font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .act-stat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .act-stat { background: var(--bg); border-radius: 8px; padding: 8px 12px; text-align: center; flex: 1; min-width: 60px; }
+  .act-stat .asn { font-size: 20px; font-weight: 800; color: var(--green); }
+  .act-stat .asl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .tab-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 9px; background: var(--bg); font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: var(--green); color: #fff; }
+  .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .week-nav button { background: var(--card); border: none; border-radius: 9px; padding: 7px 12px; font-size: 16px; cursor: pointer; box-shadow: var(--shadow); }
+  .week-nav .week-label { flex: 1; text-align: center; font-weight: 700; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME ═══ -->
+<div id="screen-home" class="screen active">
+  <div class="container">
+    <div class="home-hero">
+      
+      <h1>MTT-Trainingsplan</h1>
+      <div class="subtitle">Kontinuierlich ab 20.05.2026 · ~30 Min / Einheit</div>
+    </div>
+
+    <div class="card progress-card">
+      <div class="progress-header">
+        <span class="progress-label">Fortschritt gesamt</span>
+        <span class="progress-count" id="progress-text">0 Einheiten</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;" id="progress-sub"></div>
+    </div>
+
+    <!-- Tab-Auswahl Woche -->
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">‹</button>
+      <div class="week-label" id="week-label">Diese Woche</div>
+      <button onclick="changeWeek(1)">›</button>
+    </div>
+
+    <div id="day-list"></div>
+
+    <button class="btn-primary dark" onclick="showScreen('auswertung')">📊 Auswertung & Zielkontrolle</button>
+    <button class="btn-primary purple" onclick="showScreen('aktivitaet-log')">🚴 Aktivitäten eintragen</button>
+
+    <div class="info-box">
+      <strong>⚕️ Wichtige Hinweise</strong>
+      • Bei Schmerz 3 Übung sofort stoppen<br>
+      • Keine schnellen Bewegungen (LWS-Schutz)<br>
+      • Gewichtssteigerung nur bei Schmerz 0–1<br>
+      • Ergebnisse mit Therapeutin / Arzt besprechen
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TRAINING ═══ -->
+<div id="screen-training" class="screen">
+  <div class="container">
+    <div class="training-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div class="th-info">
+        <div class="th-title" id="th-title"></div>
+        <div class="th-sub" id="th-sub"></div>
+      </div>
+      <span class="badge-done" id="th-badge" style="display:none">✓ Done</span>
+    </div>
+
+    <div class="motivations-card" id="motivation-card">
+      <div class="quote" id="motivation-text"></div>
+      <div class="quote-author" id="motivation-author"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;">Allgemeines Befinden heute</div>
+      <div class="befinden-row" id="befinden-row"></div>
+    </div>
+
+    <div id="ex-list"></div>
+
+    <div class="card">
+      <label class="field-label">Gesamtnotiz zur Einheit</label>
+      <textarea class="notiz-input" id="allg-notiz" rows="2" placeholder="Wie lief es heute?"></textarea>
+    </div>
+
+    <button class="btn-primary" id="abschliessen-btn" onclick="abschliessen()">Training abschließen ✓</button>
+    <div style="height:10px"></div>
+  </div>
+</div>
+
+<!-- ═══ AKTIVITÄTEN LOG ═══ -->
+<div id="screen-aktivitaet-log" class="screen">
+  <div class="container">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div style="font-weight:800;font-size:19px;">Aktivitäten eintragen</div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <label class="field-label" style="margin-bottom:8px;">Datum</label>
+      <input type="date" class="num-input" id="akt-datum">
+    </div>
+
+    <div class="activity-section">
+      <div class="activity-title">🚴 Radfahren</div>
+      <div class="activity-row">
+        <div class="activity-icon">📍</div>
+        <div class="activity-label">Kilometer</div>
+        <input type="number" class="activity-input" id="akt-rad-km" placeholder="0" inputmode="decimal" min="0" step="0.1">
+        <div class="activity-unit">km</div>
+      </div>
+      <div class="activity-row">
+        <div class="activity-icon">⏱</div>
+        <div class="activity-label">Dauer</div>
+        <input type="number" class="activity-input" id="akt-rad-min" placeholder="0" inputmode="numeric" min="0">
+        <div class="activity-unit">Min</div>
+      </div>
+    </div>
+
+    <div class="activity-section">
+      <div class="activity-title">🚶 Walken / Spazieren</div>
+      <div class="activity-row">
+        <div class="activity-icon">📍</div>
+        <div class="activity-label">Kilometer</div>
+        <input type="number" class="activity-input" id="akt-walk-km" placeholder="0" inputmode="decimal" min="0" step="0.1">
+        <div class="activity-unit">km</div>
+      </div>
+      <div class="activity-row">
+        <div class="activity-icon">⏱</div>
+        <div class="activity-label">Dauer</div>
+        <input type="number" class="activity-input" id="akt-walk-min" placeholder="0" inputmode="numeric" min="0">
+        <div class="activity-unit">Min</div>
+      </div>
+    </div>
+
+    <div class="activity-section">
+      <div class="activity-title">🏊 Schwimmen</div>
+      <div class="activity-row">
+        <div class="activity-icon">📍</div>
+        <div class="activity-label">Bahnen / m</div>
+        <input type="number" class="activity-input" id="akt-swim-m" placeholder="0" inputmode="numeric" min="0">
+        <div class="activity-unit">m</div>
+      </div>
+      <div class="activity-row">
+        <div class="activity-icon">⏱</div>
+        <div class="activity-label">Dauer</div>
+        <input type="number" class="activity-input" id="akt-swim-min" placeholder="0" inputmode="numeric" min="0">
+        <div class="activity-unit">Min</div>
+      </div>
+    </div>
+
+    <div class="activity-section" style="margin-bottom:14px;">
+      <div class="activity-title">📝 Sonstiges</div>
+      <textarea class="notiz-input" id="akt-notiz" rows="2" placeholder="z. B. Yoga, Dehnübungen, Ergometer …" style="width:100%"></textarea>
+    </div>
+
+    <button class="btn-primary" onclick="saveActivity()">Aktivität speichern ✓</button>
+    <button class="btn-primary dark" onclick="showScreen('home')">Zurück</button>
+  </div>
+</div>
+
+<!-- ═══ AUSWERTUNG ═══ -->
+<div id="screen-auswertung" class="screen">
+  <div class="container">
+    <div class="page-header">
+      <button class="back-btn" onclick="showScreen('home')">←</button>
+      <div style="font-weight:800;font-size:19px;">Auswertung</div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-gesamt" onclick="switchTab('gesamt')">Gesamt</button>
+      <button class="tab-btn" id="tab-4wochen" onclick="switchTab('4wochen')">4-Wochen-Check</button>
+      <button class="tab-btn" id="tab-aktivitaet" onclick="switchTab('aktivitaet')">Aktivitäten</button>
+    </div>
+
+    <div id="auw-gesamt"></div>
+    <div id="auw-4wochen" style="display:none"></div>
+    <div id="auw-aktivitaet" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════ KONSTANTEN ═══════════
+const PLAN = [
+  { id:1,  name:"1. Rückenstrecker",            einstellung:"B + D", wdh:"15/3", gewicht:15, hinweis:"Langsam & kontrolliert. Kein Hohlkreuz. Bei Schmerz sofort stoppen." },
+  { id:2,  name:"2. Bauchmuskeln Stand/Sitz",    einstellung:"",      wdh:"15/3", gewicht:6,  hinweis:"Bauch aktiv anspannen. Rücken gerade halten." },
+  { id:3,  name:"3. Seilzug",                    einstellung:"",      wdh:"15/3", gewicht:4,  hinweis:"Schultern unten halten. Gleichmäßige Zugbewegung." },
+  { id:4,  name:"4a. Butterfly",                 einstellung:"",      wdh:"15/3", gewicht:10, hinweis:"Arme leicht gebeugt. Schulterblätter zusammenziehen." },
+  { id:5,  name:"4b. Pressback",                 einstellung:"",      wdh:"15/3", gewicht:10, hinweis:"Rumpf stabil. Ellenbogen nah am Körper." },
+  { id:6,  name:"5a. Ruderzug",                  einstellung:"",      wdh:"15/3", gewicht:10, hinweis:"Oberkörper leicht nach vorne. Rücken gerade." },
+  { id:7,  name:"5b. Brusttrainer",              einstellung:"",      wdh:"15/3", gewicht:10, hinweis:"Schultern entspannt. Brustbein nach oben." },
+  { id:8,  name:"6. Abduktion",                  einstellung:"",      wdh:"15/3", gewicht:15, hinweis:"Hüfte stabil. Bewegt werden nur die Beine." },
+  { id:9,  name:"7. Gesäßmuskulatur",            einstellung:"A",     wdh:"15/3", gewicht:15, hinweis:"LWS entlasten – Becken neutral halten." },
+  { id:10, name:"8. Funktionsstemme",            einstellung:"",      wdh:"15/3", gewicht:30, hinweis:"Knie nicht über Zehenspitzen. Rücken aufrecht." },
+  { id:11, name:"9. Gerade untere Bauchmuskeln", einstellung:"",      wdh:"20 Sek./3", gewicht:null, hinweis:"Isometrisch halten. Atmen nicht vergessen." },
+  { id:12, name:"10. Gerade obere Bauchmuskeln", einstellung:"",      wdh:"10/3", gewicht:null, hinweis:"Langsame Ausführung. Nacken entspannen." },
+  { id:13, name:"11. Seitliche Rumpfmuskeln",    einstellung:"",      wdh:"10/3", gewicht:null, hinweis:"Beide Seiten gleich. Hüfte stabil." },
+  { id:14, name:"12a. Stützstemme",             einstellung:"",      wdh:"15/3", gewicht:15, hinweis:"Schulterblätter aktiv. Rumpf angespannt." },
+  { id:15, name:"12b. Schulterblattfixator",    einstellung:"",      wdh:"15/3", gewicht:15, hinweis:"Schultern aktiv nach unten ziehen." },
+];
+const SESSION_ORDER = [1,2,8,9,10,11,12,13,14,15,3,4,5,6,7];
+const SESSION_EXERCISES = SESSION_ORDER.map(id => PLAN.find(e => e.id === id));
+
+// Startdatum 20.05.2026, Mo/Mi/Fr = Wochentage 1,3,5
+const START_DATE = new Date(2026,4,20); // 20. Mai 2026 (Mittwoch)
+const TRAINING_WEEKDAYS = [1,3,5]; // Mo, Mi, Fr
+
+const MOTIVATIONS = [
+  { text: "Jeder Schritt zählt – auch der kleinste bringt dich weiter.", author: "" },
+  { text: "Stärke entsteht nicht aus dem, was du kannst, sondern aus dem, was du für unmöglich hieltest.", author: "Rikki Rogers" },
+  { text: "Der Körper erreicht, was der Geist glaubt.", author: "" },
+  { text: "Du musst nicht schnell sein. Du musst nur nicht aufhören.", author: "" },
+  { text: "Fortschritt, nicht Perfektion.", author: "" },
+  { text: "Dein Körper dankt dir für jede Einheit – heute und morgen.", author: "" },
+  { text: "Bewegung ist Medizin – und du nimmst sie dir gerade.", author: "" },
+  { text: "Stolz entsteht aus dem Tun, nicht aus dem Wollen.", author: "" },
+  { text: "Schmerz ist vorübergehend. Aufgeben ist dauerhaft.", author: "" },
+  { text: "Du bist stärker als du denkst.", author: "" },
+  { text: "Jeden Tag ein bisschen besser als gestern – das reicht.", author: "" },
+  { text: "Dein Rücken trägt dich. Jetzt trägst du ihn.", author: "" },
+];
+
+// ═══════════ STATE ═══════════
+const STORAGE_KEY = "mtt_v3";
+let state = loadState();
+let activeDay = null; // ISO-String YYYY-MM-DD
+let expandedEx = null;
+let currentWeekOffset = 0;
+let currentAuwTab = 'gesamt';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return { trainings: {}, activities: [] };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+// Trainingsdaten für einen Tag initialisieren (falls noch nicht vorhanden)
+function ensureDay(dateStr) {
+  if (!state.trainings[dateStr]) {
+    state.trainings[dateStr] = {
+      _allgemein: { befinden: 3, notiz: "", abgeschlossen: false }
+    };
+    SESSION_EXERCISES.forEach(ex => {
+      state.trainings[dateStr][ex.id] = { done: false, gewicht: ex.gewicht ?? "", schmerz: 0, notiz: "" };
+    });
+  }
+}
+
+// ═══════════ DATE HELPERS ═══════════
+function toISO(d) {
+  return d.toISOString().slice(0,10);
+}
+function fromISO(s) {
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function fmtDate(d) {
+  return d.toLocaleDateString("de-DE", { weekday:"short", day:"2-digit", month:"2-digit" });
+}
+function fmtDateLong(d) {
+  return d.toLocaleDateString("de-DE", { weekday:"long", day:"2-digit", month:"2-digit", year:"numeric" });
+}
+function isTrainingDay(d) {
+  return TRAINING_WEEKDAYS.includes(d.getDay()) && d >= START_DATE;
+}
+// Montag der Woche für ein Datum
+function weekStart(d) {
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  const m = new Date(d);
+  m.setDate(m.getDate() + diff);
+  m.setHours(0,0,0,0);
+  return m;
+}
+function getWeekDays(monday) {
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+// ═══════════ ROUTING ═══════════
+function showScreen(name, dateStr) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0,0);
+  if (name === 'home') renderHome();
+  if (name === 'training') { activeDay = dateStr; expandedEx = null; renderTraining(); }
+  if (name === 'auswertung') renderAuswertung();
+  if (name === 'aktivitaet-log') renderAktivitaetLog();
+}
+
+// ═══════════ WEEK NAV ═══════════
+function changeWeek(delta) {
+  currentWeekOffset += delta;
+  renderHome();
+}
+
+// ═══════════ HOME ═══════════
+function renderHome() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const totalDone = Object.values(state.trainings).filter(d => d._allgemein && d._allgemein.abgeschlossen).length;
+  document.getElementById('progress-text').textContent = `${totalDone} Einheiten absolviert`;
+  const pct = Math.min(100, (totalDone / 24) * 100); // Referenz: 4 Wochen = 12 Einheiten, zeige bis 24
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-sub').textContent = totalDone > 0
+    ? `Weiter so! Jede Einheit stärkt deinen Rücken.`
+    : `Heute starten – dein Rücken wird es dir danken.`;
+
+  // Woche berechnen
+  const baseMonday = weekStart(today);
+  const dispMonday = new Date(baseMonday);
+  dispMonday.setDate(dispMonday.getDate() + currentWeekOffset * 7);
+  const days = getWeekDays(dispMonday);
+
+  const dispEnd = new Date(dispMonday);
+  dispEnd.setDate(dispEnd.getDate() + 6);
+  const wLabel = currentWeekOffset === 0 ? 'Diese Woche'
+    : currentWeekOffset === -1 ? 'Letzte Woche'
+    : currentWeekOffset === 1 ? 'Nächste Woche'
+    : `${dispMonday.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})} – ${dispEnd.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})}`;
+  document.getElementById('week-label').textContent = wLabel;
+
+  const list = document.getElementById('day-list');
+  list.innerHTML = '';
+
+  const trainingDaysInWeek = days.filter(d => isTrainingDay(d));
+
+  if (trainingDaysInWeek.length === 0) {
+    const msg = document.createElement('div');
+    msg.style.cssText = 'text-align:center;padding:20px;color:var(--muted);font-size:13px;';
+    msg.textContent = 'In dieser Woche keine Trainingstage (ab 20.05.2026 gilt Mo/Mi/Fr).';
+    list.appendChild(msg);
+    return;
+  }
+
+  trainingDaysInWeek.forEach(d => {
+    const ds = toISO(d);
+    const isDone = state.trainings[ds] && state.trainings[ds]._allgemein.abgeschlossen;
+    const isToday = toISO(d) === toISO(today);
+    const icon = isDone ? '✅' : isToday ? '🎯' : d < today ? '⚠️' : '🏋️';
+    const cls = isDone ? 'done' : isToday ? 'today-item' : '';
+
+    const div = document.createElement('div');
+    div.className = `day-item ${cls}`;
+    div.innerHTML = `
+      <div class="day-icon">${icon}</div>
+      <div class="day-info">
+        <div class="day-title">${fmtDate(d)}${isToday ? ' <span style="font-size:11px;color:#6366F1;font-weight:700;">Heute</span>' : ''}</div>
+        <div class="day-date">${isDone ? '✓ Absolviert' : d < today ? 'Noch offen' : 'Geplant'}</div>
+      </div>
+      ${isDone ? '<span class="day-badge">Done</span>' : ''}
+      <span class="chevron">›</span>
+    `;
+    div.onclick = () => showScreen('training', ds);
+    list.appendChild(div);
+  });
+}
+
+// ═══════════ TRAINING ═══════════
+function renderTraining() {
+  const ds = activeDay;
+  ensureDay(ds);
+  const d = fromISO(ds);
+  const allg = state.trainings[ds]._allgemein;
+
+  document.getElementById('th-title').textContent = fmtDateLong(d);
+  const totalDone = Object.values(state.trainings).filter(x => x._allgemein && x._allgemein.abgeschlossen).length;
+  document.getElementById('th-sub').textContent = `Einheit #${totalDone + (allg.abgeschlossen ? 0 : 1)} · ~30 Min`;
+  document.getElementById('th-badge').style.display = allg.abgeschlossen ? '' : 'none';
+  document.getElementById('abschliessen-btn').style.display = allg.abgeschlossen ? 'none' : 'block';
+
+  // Motivation
+  const mot = MOTIVATIONS[Math.floor(Math.abs(d.getTime() / 86400000)) % MOTIVATIONS.length];
+  document.getElementById('motivation-text').textContent = `„${mot.text}"`;
+  document.getElementById('motivation-author').textContent = mot.author ? `– ${mot.author}` : '— Deine tägliche Erinnerung';
+
+  // Befinden
+  renderBefinden();
+
+  // Notiz
+  const notizEl = document.getElementById('allg-notiz');
+  notizEl.value = allg.notiz;
+  notizEl.oninput = () => { state.trainings[ds]._allgemein.notiz = notizEl.value; saveState(); };
+
+  renderExList();
+}
+
+function renderBefinden() {
+  const allg = state.trainings[activeDay]._allgemein;
+  const befRow = document.getElementById('befinden-row');
+  befRow.innerHTML = '';
+  ['😞','😕','😐','🙂','😊'].forEach((em, vi) => {
+    const v = vi+1;
+    const btn = document.createElement('button');
+    btn.className = 'emoji-btn' + (allg.befinden === v ? ' selected' : '');
+    btn.textContent = em;
+    btn.onclick = () => {
+      state.trainings[activeDay]._allgemein.befinden = v;
+      saveState();
+      document.querySelectorAll('#befinden-row .emoji-btn').forEach((b, i) => b.classList.toggle('selected', i+1 === v));
+    };
+    befRow.appendChild(btn);
+  });
+}
+
+function renderExList() {
+  const ds = activeDay;
+  const container = document.getElementById('ex-list');
+  container.innerHTML = '';
+  SESSION_EXERCISES.forEach(ex => {
+    const ed = state.trainings[ds][ex.id];
+    const isOpen = expandedEx === ex.id;
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.id = `ex-card-${ex.id}`;
+    const gwLabel = ex.gewicht !== null ? ` · ${ed.gewicht || ex.gewicht} kg` : '';
+    const einst = ex.einstellung ? ` <span style="font-size:11px;color:var(--muted);background:var(--bg);border-radius:5px;padding:1px 5px;">${ex.einstellung}</span>` : '';
+    let bodyHTML = '';
+    if (isOpen) {
+      const kgField = ex.gewicht !== null ? `
+        <div class="field-group">
+          <label class="field-label">Gewicht (kg)</label>
+          <input type="number" class="num-input" id="gw-${ex.id}" value="${ed.gewicht}" inputmode="decimal"
+            oninput="setExField(${ex.id},'gewicht',this.value)">
+        </div>` : '';
+      const sCls = ['s0','s1','s2','s3'];
+      const schmerz = [0,1,2,3].map(vi => `
+        <button class="schmerz-btn ${sCls[vi]}${ed.schmerz===vi?' active':''}" onclick="setSchmerz(${ex.id},${vi})">${vi}</button>`).join('');
+      bodyHTML = `
+        <div class="ex-body open">
+          <div class="hint-box">💡 ${ex.hinweis}</div>
+          ${kgField}
+          <div class="field-group">
+            <label class="field-label">Schmerz (0–3)</label>
+            <div class="schmerz-row">${schmerz}</div>
+            <div class="schmerz-hint">0 = kein · 1 = leicht · 2 = mittel · 3 = stark → Übung abbrechen</div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Notiz</label>
+            <textarea class="notiz-input" rows="2" placeholder="Notiz…" oninput="setExField(${ex.id},'notiz',this.value)">${ed.notiz}</textarea>
+          </div>
+        </div>`;
+    }
+    card.innerHTML = `
+      <div class="ex-header" onclick="toggleEx(${ex.id}, event)">
+        <div class="ex-checkbox${ed.done?' checked':''}" id="cb-${ex.id}" onclick="toggleDone(${ex.id}, event)">${ed.done ? '✓' : ''}</div>
+        <div style="flex:1">
+          <div class="ex-name">${ex.name}${einst}</div>
+          <div class="ex-meta">${ex.wdh}${gwLabel}</div>
+        </div>
+        <span class="ex-arrow">${isOpen ? '▲' : '▼'}</span>
+      </div>
+      ${bodyHTML}`;
+    container.appendChild(card);
+  });
+}
+
+function toggleEx(exId, e) {
+  expandedEx = expandedEx === exId ? null : exId;
+  renderExList();
+}
+function toggleDone(exId, e) {
+  e.stopPropagation();
+  state.trainings[activeDay][exId].done = !state.trainings[activeDay][exId].done;
+  saveState();
+  const cb = document.getElementById(`cb-${exId}`);
+  if (cb) { cb.classList.toggle('checked', state.trainings[activeDay][exId].done); cb.textContent = state.trainings[activeDay][exId].done ? '✓' : ''; }
+}
+function setExField(exId, field, value) {
+  state.trainings[activeDay][exId][field] = value;
+  saveState();
+}
+function setSchmerz(exId, val) {
+  state.trainings[activeDay][exId].schmerz = val;
+  saveState();
+  document.querySelectorAll(`#ex-card-${exId} .schmerz-btn`).forEach((btn, i) => btn.classList.toggle('active', i === val));
+}
+function abschliessen() {
+  state.trainings[activeDay]._allgemein.notiz = document.getElementById('allg-notiz').value;
+  state.trainings[activeDay]._allgemein.abgeschlossen = true;
+  saveState();
+  document.getElementById('th-badge').style.display = '';
+  document.getElementById('abschliessen-btn').style.display = 'none';
+}
+
+// ═══════════ AKTIVITÄTEN ═══════════
+function renderAktivitaetLog() {
+  const today = new Date();
+  document.getElementById('akt-datum').value = toISO(today);
+  document.getElementById('akt-rad-km').value = '';
+  document.getElementById('akt-rad-min').value = '';
+  document.getElementById('akt-walk-km').value = '';
+  document.getElementById('akt-walk-min').value = '';
+  document.getElementById('akt-swim-m').value = '';
+  document.getElementById('akt-swim-min').value = '';
+  document.getElementById('akt-notiz').value = '';
+}
+function saveActivity() {
+  const datum = document.getElementById('akt-datum').value;
+  if (!datum) { alert('Bitte ein Datum wählen.'); return; }
+  const entry = {
+    datum,
+    rad: { km: parseFloat(document.getElementById('akt-rad-km').value)||0, min: parseInt(document.getElementById('akt-rad-min').value)||0 },
+    walk: { km: parseFloat(document.getElementById('akt-walk-km').value)||0, min: parseInt(document.getElementById('akt-walk-min').value)||0 },
+    swim: { m: parseInt(document.getElementById('akt-swim-m').value)||0, min: parseInt(document.getElementById('akt-swim-min').value)||0 },
+    notiz: document.getElementById('akt-notiz').value,
+  };
+  if (!state.activities) state.activities = [];
+  // Bestehenden Eintrag für dieses Datum überschreiben
+  const existing = state.activities.findIndex(a => a.datum === datum);
+  if (existing >= 0) state.activities[existing] = entry;
+  else state.activities.push(entry);
+  saveState();
+  alert('Aktivität gespeichert! ✓');
+  showScreen('home');
+}
+
+// ═══════════ AUSWERTUNG ═══════════
+function switchTab(tab) {
+  currentAuwTab = tab;
+  ['gesamt','4wochen','aktivitaet'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+    document.getElementById('auw-'+t).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'gesamt') renderAuwGesamt();
+  if (tab === '4wochen') renderAuw4Wochen();
+  if (tab === 'aktivitaet') renderAuwAktivitaet();
+}
+
+function renderAuswertung() {
+  switchTab('gesamt');
+}
+
+function renderAuwGesamt() {
+  const container = document.getElementById('auw-gesamt');
+  const done = Object.entries(state.trainings)
+    .filter(([k,v]) => v._allgemein && v._allgemein.abgeschlossen)
+    .sort((a,b) => a[0].localeCompare(b[0]));
+
+  let html = `<div class="stat-grid">
+    <div class="stat-card"><div class="stat-num">${done.length}</div><div class="stat-label">Einheiten absolviert</div></div>
+    <div class="stat-card"><div class="stat-num">${done.length > 0 ? Math.round(done.reduce((a,[,d]) => a + d._allgemein.befinden, 0) / done.length * 10)/10 : '–'}</div><div class="stat-label">Ø Befinden (1–5)</div></div>
+  </div>`;
+
+  if (done.length === 0) {
+    html += `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;padding:24px;">Noch keine abgeschlossenen Einheiten.</div>`;
+    container.innerHTML = html;
+    return;
+  }
+
+  SESSION_EXERCISES.forEach(ex => {
+    const gewichte = done.map(([,d]) => parseFloat(d[ex.id]?.gewicht)).filter(v => !isNaN(v) && v > 0);
+    const schmerzen = done.map(([,d]) => d[ex.id]?.schmerz || 0);
+    const maxSchmerz = schmerzen.length ? Math.max(...schmerzen) : 0;
+    if (!ex.gewicht && gewichte.length === 0) return;
+    const pills = done.map(([k,d], i) => {
+      const g = parseFloat(d[ex.id]?.gewicht);
+      return `<div class="kg-pill"><span class="pill-label">E${i+1} </span>${isNaN(g) ? '–' : g} kg</div>`;
+    }).join('');
+    const warnR = maxSchmerz > 1 ? `<div class="alert-red">⚠ Max. Schmerz: ${maxSchmerz}/3 – besprechen</div>` : '';
+    const warnG = gewichte.length >= 2 && gewichte[gewichte.length-1] > gewichte[0] && maxSchmerz <= 1
+      ? `<div class="alert-green">📈 ${gewichte[0]} → ${gewichte[gewichte.length-1]} kg</div>` : '';
+    html += `<div class="ex-result"><div class="ex-result-name">${ex.name}</div><div class="kg-pills">${pills}</div>${warnR}${warnG}</div>`;
+  });
+
+  html += `<div class="reco-box"><strong>Allgemeine Empfehlung</strong>
+    Übungen mit Schmerz 0–1 problemlos: Gewicht um 2–5 kg erhöhen.<br>
+    Übungen mit Schmerz 2–3: Gewicht reduzieren oder mit Therapeutin klären.<br>
+    Befinden unter 3: Ruhetag einlegen.</div>`;
+
+  container.innerHTML = html;
+}
+
+function renderAuw4Wochen() {
+  const container = document.getElementById('auw-4wochen');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+
+  const done = Object.entries(state.trainings)
+    .filter(([k,v]) => v._allgemein && v._allgemein.abgeschlossen)
+    .sort((a,b) => a[0].localeCompare(b[0]));
+
+  const recent = done.filter(([k]) => fromISO(k) >= fourWeeksAgo);
+
+  if (recent.length === 0) {
+    container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;padding:24px;">
+      Für den 4-Wochen-Check werden abgeschlossene Einheiten der letzten 28 Tage benötigt.<br><br>Noch keine Daten vorhanden.</div>`;
+    return;
+  }
+
+  // Analyse
+  const avgBefinden = recent.reduce((a,[,d]) => a + d._allgemein.befinden, 0) / recent.length;
+  const expectedInPeriod = Math.max(1, Math.round(28 / 7 * 3)); // ~12 Einheiten
+  const adherence = Math.round((recent.length / expectedInPeriod) * 100);
+
+  const schmerzenProEx = SESSION_EXERCISES.map(ex => {
+    const s = recent.map(([,d]) => d[ex.id]?.schmerz || 0);
+    return { ex, avg: s.reduce((a,b)=>a+b,0)/s.length, max: Math.max(...s) };
+  });
+  const problematic = schmerzenProEx.filter(x => x.max >= 2);
+  const progressEx = SESSION_EXERCISES.filter(ex => {
+    const gList = recent.map(([,d]) => parseFloat(d[ex.id]?.gewicht)).filter(v => !isNaN(v) && v > 0);
+    return gList.length >= 2 && gList[gList.length-1] > gList[0];
+  });
+
+  let empfehlung = '';
+  const rec = [];
+  if (adherence < 60) rec.push({ text: `Trainingsfrequenz: Nur ${recent.length} von ~${expectedInPeriod} geplanten Einheiten absolviert (${adherence}%). Versuche, wenigstens 2× pro Woche zu trainieren.`, type:'warn' });
+  else rec.push({ text: `Sehr gute Regelmäßigkeit! ${recent.length} Einheiten in 4 Wochen (${adherence}% der geplanten Einheiten). Weiter so!`, type:'good' });
+
+  if (avgBefinden < 3) rec.push({ text: `Dein Ø-Befinden liegt bei ${Math.round(avgBefinden*10)/10}/5. Das deutet auf Belastung hin – erwäge öfter Ruhetage.`, type:'warn' });
+  else rec.push({ text: `Befinden im grünen Bereich (Ø ${Math.round(avgBefinden*10)/10}/5). Das Training tut dir gut.`, type:'good' });
+
+  if (problematic.length > 0) {
+    rec.push({ text: `Schmerzauffällig (Wert ≥ 2): ${problematic.map(x=>x.ex.name).join(', ')}. Bitte mit Therapeutin besprechen und Gewicht reduzieren.`, type:'warn' });
+  } else {
+    rec.push({ text: `Keine Übungen mit anhaltenden Schmerzen ≥ 2. Weiter auf deinen Körper hören!`, type:'good' });
+  }
+
+  if (progressEx.length > 0) rec.push({ text: `Progression bei: ${progressEx.map(e=>e.name).join(', ')}. Du wirst stärker – Gewichtserhöhung um 2–5 kg prüfen.`, type:'good' });
+
+  const recHTML = rec.map(r => `<div class="zw-item" style="${r.type==='warn'?'background:rgba(255,255,255,0.1);border-left:3px solid #FCD34D':'background:rgba(255,255,255,0.15);border-left:3px solid #6EE7B7'}">${r.type==='warn'?'⚠️':'✅'} ${r.text}</div>`).join('');
+
+  container.innerHTML = `
+    <div class="zwischenauw">
+      <h3>4-Wochen-Zwischenauswertung</h3>
+      <p>Analysezeitraum: letzte 28 Tage · ${recent.length} Einheiten</p>
+      ${recHTML}
+    </div>
+    <div class="reco-box"><strong>Nächste Schritte</strong>
+      ${adherence < 60 ? '• Trainingszeiten fest im Kalender blocken<br>' : ''}
+      ${problematic.length > 0 ? '• Schmerzhafte Übungen mit Therapeutin besprechen<br>' : ''}
+      ${progressEx.length > 0 ? '• Gewichte bei Fortschrittsübungen vorsichtig erhöhen<br>' : ''}
+      • Nächster Check in 4 Wochen
+    </div>`;
+}
+
+function renderAuwAktivitaet() {
+  const container = document.getElementById('auw-aktivitaet');
+  const acts = (state.activities || []).sort((a,b) => a.datum.localeCompare(b.datum));
+
+  if (acts.length === 0) {
+    container.innerHTML = `<div class="card" style="text-align:center;color:var(--muted);font-size:13px;padding:24px;">Noch keine Aktivitäten eingetragen.</div>`;
+    return;
+  }
+
+  const totRadKm = acts.reduce((a,x) => a + (x.rad?.km||0), 0);
+  const totRadMin = acts.reduce((a,x) => a + (x.rad?.min||0), 0);
+  const totWalkKm = acts.reduce((a,x) => a + (x.walk?.km||0), 0);
+  const totWalkMin = acts.reduce((a,x) => a + (x.walk?.min||0), 0);
+  const totSwimM = acts.reduce((a,x) => a + (x.swim?.m||0), 0);
+  const totSwimMin = acts.reduce((a,x) => a + (x.swim?.min||0), 0);
+  const totAktMin = totRadMin + totWalkMin + totSwimMin;
+
+  let html = `<div class="activity-summary">
+    <h4>Gesamtübersicht Aktivitäten</h4>
+    <div class="act-stat-row">
+      <div class="act-stat"><div class="asn">🚴</div><div style="font-size:15px;font-weight:700;color:var(--green)">${Math.round(totRadKm*10)/10}</div><div class="asl">km Rad</div></div>
+      <div class="act-stat"><div class="asn">🚶</div><div style="font-size:15px;font-weight:700;color:var(--green)">${Math.round(totWalkKm*10)/10}</div><div class="asl">km Walk</div></div>
+      <div class="act-stat"><div class="asn">🏊</div><div style="font-size:15px;font-weight:700;color:var(--green)">${totSwimM}</div><div class="asl">m Schwimm</div></div>
+      <div class="act-stat"><div class="asn">⏱</div><div style="font-size:15px;font-weight:700;color:var(--green)">${totAktMin}</div><div class="asl">Min ges.</div></div>
+    </div>
+  </div>`;
+
+  html += `<div class="section-title">Alle Einträge</div>`;
+  acts.slice().reverse().forEach(a => {
+    const parts = [];
+    if (a.rad?.km > 0 || a.rad?.min > 0) parts.push(`🚴 ${a.rad.km} km / ${a.rad.min} Min`);
+    if (a.walk?.km > 0 || a.walk?.min > 0) parts.push(`🚶 ${a.walk.km} km / ${a.walk.min} Min`);
+    if (a.swim?.m > 0 || a.swim?.min > 0) parts.push(`🏊 ${a.swim.m} m / ${a.swim.min} Min`);
+    if (a.notiz) parts.push(`📝 ${a.notiz}`);
+    html += `<div class="ex-result">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px;">${fromISO(a.datum).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'})}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;">${parts.join('<br>') || '–'}</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ═══════════ INIT ═══════════
+renderHome();
+</script>
+</body>
+</html>
